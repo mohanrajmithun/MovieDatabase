@@ -361,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/MovieDatabase.Infrastructure/Migrations/20240302052240_initial_create_tables.cs
+/MovieDatabase.Infrastructure/Migrations/20240303023205_additional_data.cs
+/MovieDatabase.Infrastructure/Migrations/20240305035456_added_json_options.cs
+/MovieDatabase.Infrastructure/Migrations/20240311234712_adding_identity_tables.cs
+/MovieDatabase.Infrastructure/Migrations/20240311235551_add_identity_tables.cs
+/MovieDatabase.Infrastructure/Migrations/20240316023307_creating_database.cs
+/MovieDatabase.Infrastructure/Migrations/AppDbContextModelSnapshot.cs
+/MovieApi/appsettings.json
