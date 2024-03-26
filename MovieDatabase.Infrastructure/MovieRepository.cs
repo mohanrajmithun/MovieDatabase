@@ -8,40 +8,69 @@ using MovieDatabase.Application;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
+using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace MovieDatabase.Infrastructure
 {
     public class MovieRepository : IMovieRepository
     {
         private readonly AppDbContext appDbContext;
+        private readonly ILogger<MovieRepository> logger;
+        private readonly IMemoryCache memoryCache;
 
-
-
-        public MovieRepository(AppDbContext appDbContext)
+        public MovieRepository(AppDbContext appDbContext,ILogger<MovieRepository> logger )
         {
             this.appDbContext = appDbContext;
+            this.logger = logger;
         }
 
         public async Task<List<Movie>> GetAllMovies()
 
         {
-            var Movies = await appDbContext.Movies.ToListAsync();
+            try
+            {
 
-            return Movies;
+                logger.LogInformation("Fetching all movies...");
+                var Movies = await appDbContext.Movies.ToListAsync();
+
+                return Movies;
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching all movies.");
+
+                throw;
+            }
 
         }
 
         public async Task<List<MovieWithGenresDTO>> GetMovieGenres()
         {
-            List<MovieWithGenresDTO> moviesWithGenres = await appDbContext.Movies
-            .Select(movie => new MovieWithGenresDTO
+            try
             {
-                MovieName = movie.Name,
-                Genres = movie.MovieGenres.Select(movieGenre => movieGenre.Genre.Name).ToList()
-            })
-            .ToListAsync();
+                logger.LogInformation("Fetching all movies with their genres...");
+                List<MovieWithGenresDTO> moviesWithGenres = await appDbContext.Movies
+                                        .Select(movie => new MovieWithGenresDTO
+                                                    {
+                                                        MovieName = movie.Name,
+                                                        Genres = movie.MovieGenres.Select(movieGenre => movieGenre.Genre.Name).ToList()
+                                                    })
+                                    .ToListAsync();
 
-            return moviesWithGenres;
+                return moviesWithGenres;
+
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching all movies with their genres.");
+
+                throw;
+            }
+
 
 
 
@@ -49,99 +78,195 @@ namespace MovieDatabase.Infrastructure
 
         public async Task<List<Genre>> GetAllGenres()
         {
-            var genresWithMovies = await appDbContext.Genres.ToListAsync();
+            try
+            {
+                logger.LogInformation("Fetching all genres...");
 
-            return genresWithMovies;
+                var genresWithMovies = await appDbContext.Genres.ToListAsync();
+
+                return genresWithMovies;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching all genres.");
+
+
+                throw;
+            }
+
         }
 
         public async Task<Movie> GetMovieById(int id)
         {
-            var Movie = await appDbContext.Movies.SingleOrDefaultAsync(movie => movie.Id == id);
+            try
+            {
+                logger.LogInformation("Fetching movie by ID...");
 
-            return Movie;
+                var Movie = await appDbContext.Movies.SingleOrDefaultAsync(movie => movie.Id == id);
+
+                return Movie;
+
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching movie by ID.");
+
+
+                throw;
+            }
+
         }
 
         public async Task<Movie> GetMovieByName(string name)
         {
-            var Movie = await appDbContext.Movies.SingleOrDefaultAsync(movie => movie.Name.ToUpper() == name.ToUpper());
+            try
+            {
+                logger.LogInformation("Fetching movie by name...");
+                var Movie = await appDbContext.Movies.SingleOrDefaultAsync(movie => movie.Name.ToUpper() == name.ToUpper());
 
             return Movie;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching movie by name.");
+
+
+                throw;
+            }
         }
 
 
         public async Task<Genre> GetGenreById(int id)
         {
-            var genre = await appDbContext.Genres.SingleOrDefaultAsync(g => g.Id == id);
-            return genre;
+            try
+            {
+                logger.LogInformation("Fetching Genre by ID...");
+
+                var genre = await appDbContext.Genres.SingleOrDefaultAsync(g => g.Id == id);
+
+                return genre;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching Genre by ID.");
+
+
+                throw;
+            }
         }
 
         public async Task<Genre> GetGenreByName(string name)
         {
-            var genre = await appDbContext.Genres.SingleOrDefaultAsync(g => g.Name == name);
+            try
+            {
+                logger.LogInformation("Fetching Genre by name...");
+                var genre = await appDbContext.Genres.SingleOrDefaultAsync(g => g.Name == name);
 
-            return genre;
+                return genre;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while fetching Genre by name.");
+
+
+                throw;
+            }
         }
 
 
         public async Task<List<GenrewithMoviesDTO>> GetGenresWithMovies()
         {
-            var genreswithmovies = await appDbContext.Genres
+            try
+            {
+                logger.LogInformation("Fetching Genres with their movies...");
+                var genreswithmovies = await appDbContext.Genres
                                    .Select(genre => new GenrewithMoviesDTO
                                    { Genre = genre.Name,
                                        Movies = genre.MovieGenres.Select(moviegenre => moviegenre.Movie.Name).ToList() }
                                    )
                                    .ToListAsync();
 
-            return genreswithmovies;
+                return genreswithmovies;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while Genres with their movies.");
+
+
+                throw;
+            }
         }
 
         public async Task<CreateMovieResponseDTO> CreateMovie(CreateMovieDTO newmovie)
         {
 
-
-
-            Movie movie = new Movie()
+            try
             {
-                Name = newmovie.Name,
-                Description = newmovie.Description,
-                rating = newmovie.Rating
-            };
+                logger.LogInformation("Creating a New Movie");
 
-            var movieresult = await appDbContext.Movies.AddAsync(movie);
-            await appDbContext.SaveChangesAsync();
+                    Movie movie = new Movie()
+                {
+                    Name = newmovie.Name,
+                    Description = newmovie.Description,
+                    rating = newmovie.Rating
+                };
 
-            CreateMovieResponseDTO createmovieresponseDTO = new CreateMovieResponseDTO()
+                var movieresult = await appDbContext.Movies.AddAsync(movie);
+                await appDbContext.SaveChangesAsync();
+
+                CreateMovieResponseDTO createmovieresponseDTO = new CreateMovieResponseDTO()
+                {
+                    MovieName = movieresult.Entity.Name,
+                    Description = movieresult.Entity.Description,
+                    Rating = movieresult.Entity.rating
+                };
+
+
+                return createmovieresponseDTO;
+            }
+            catch (Exception ex)
             {
-                MovieName = movieresult.Entity.Name,
-                Description = movieresult.Entity.Description,
-                Rating = movieresult.Entity.rating
-            };
+                logger.LogError(ex, "An error occurred while creating the movie.");
 
 
-            return createmovieresponseDTO;
-
+                throw;
+            }
 
         }
 
 
         public async Task<Genre> createGenre(Genre genre)
         {
-            var genreresult = await appDbContext.Genres.AddAsync(genre);
-            await appDbContext.SaveChangesAsync();
+            try
+            {
+                logger.LogInformation("Creating a New Genre");
+                var genreresult = await appDbContext.Genres.AddAsync(genre);
+                await appDbContext.SaveChangesAsync();
 
-            return genreresult.Entity;
+                return genreresult.Entity;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while creating New Genre.");
+
+
+                throw;
+            }
         }
 
         public async Task<MovieWithGenresDTO> AddGenreToMovie(MovieGenre movieGenre)
         {
 
 
-            var MovieGenreResult = await appDbContext.MovieGenres.AddAsync(movieGenre);
-            var result = await appDbContext.SaveChangesAsync();
-
-            if (result > 0)
+            try
             {
-                
+                logger.LogInformation("Adding Genre to the Movie");
+                var MovieGenreResult = await appDbContext.MovieGenres.AddAsync(movieGenre);
+                var result = await appDbContext.SaveChangesAsync();
+
+                if (result > 0)
+                {
+
                     Movie movie = await GetMovieById(movieGenre.MovieId);
                     List<MovieWithGenresDTO> moviewithgenredto = await GetMovieGenres();
 
@@ -149,10 +274,17 @@ namespace MovieDatabase.Infrastructure
 
                     return moviegenre;
 
-               
+
+
+                }
 
             }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while Adding Genre to the Movie");
 
+                throw;
+            }
 
             return null;
         }
@@ -160,31 +292,51 @@ namespace MovieDatabase.Infrastructure
 
         public async Task<Movie> UpdateMovie(Movie newmovie)
         {
-            var movie = await appDbContext.Movies.FindAsync(newmovie.Id);
+            try
+            {
+                logger.LogInformation("Updating a existing Movie");
+                var movie = await appDbContext.Movies.FindAsync(newmovie.Id);
 
-            movie.Name = newmovie.Name;
-            movie.Description = newmovie.Description;
-            movie.rating = newmovie.rating;
+                movie.Name = newmovie.Name;
+                movie.Description = newmovie.Description;
+                movie.rating = newmovie.rating;
 
-            await appDbContext.SaveChangesAsync(); 
+                await appDbContext.SaveChangesAsync();
 
-            return movie;
+                return movie;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while Updating a existing Movie");
+
+                throw;
+            }
 
         }
 
         public async Task<MovieWithGenresDTO> DeleteGenretoMovie(MovieGenre movieGenre)
         {
+            try
+            {
+                    logger.LogInformation("Deleting Genre to the Movie");
 
-            var MovieGenreResult = appDbContext.MovieGenres.Remove(movieGenre);
-            var result = await appDbContext.SaveChangesAsync();
+                    var MovieGenreResult = appDbContext.MovieGenres.Remove(movieGenre);
+                    var result = await appDbContext.SaveChangesAsync();
 
-            if (result > 0) {
-                Movie movie = await GetMovieById(movieGenre.MovieId);
-                List<MovieWithGenresDTO> moviewithgenredto = await GetMovieGenres();
+                    if (result > 0) {
+                        Movie movie = await GetMovieById(movieGenre.MovieId);
+                        List<MovieWithGenresDTO> moviewithgenredto = await GetMovieGenres();
 
-                var moviegenre = moviewithgenredto.FirstOrDefault(m => m.MovieName == movie.Name);
+                        var moviegenre = moviewithgenredto.FirstOrDefault(m => m.MovieName == movie.Name);
 
-                return moviegenre;
+                        return moviegenre;
+                    }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while Deleting Genre to the Movie");
+
+                throw;
             }
 
             return null;
@@ -194,19 +346,30 @@ namespace MovieDatabase.Infrastructure
 
         public async Task<Movie> DeleteMovie(int Id)
         {
-            var movieToDelete = await appDbContext.Movies.FindAsync(Id);
-
-            if (movieToDelete != null)
+            try
             {
-                appDbContext.Movies.Remove(movieToDelete);
-                var result = await appDbContext.SaveChangesAsync();
+                logger.LogInformation("Deleting a existing Movie");
+                var movieToDelete = await appDbContext.Movies.FindAsync(Id);
 
-                if (result > 0)
+                if (movieToDelete != null)
                 {
-                    return movieToDelete;
-                }
+                    appDbContext.Movies.Remove(movieToDelete);
+                    var result = await appDbContext.SaveChangesAsync();
 
-             }
+                    if (result > 0)
+                    {
+                        return movieToDelete;
+                    }
+
+                }
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "An error occurred while Deleting a Movie");
+
+                throw;
+            }
+
 
             return null;
         }
