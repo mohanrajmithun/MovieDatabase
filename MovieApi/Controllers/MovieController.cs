@@ -197,7 +197,7 @@ namespace MovieApi.Controllers
                 return Ok(genreswithmovies);
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
 
                 throw;
@@ -218,11 +218,11 @@ namespace MovieApi.Controllers
             return await movieService.createGenre(genre);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,User")]
         [HttpPost("AddGenreToMovie")]
         public async Task<ActionResult<MovieWithGenresDTO>> AddGenreToMovie(MovieGenre movieGenre)
         {
-            try
+            //try
             {
                 if (!ModelState.IsValid)
                 {
@@ -258,10 +258,10 @@ namespace MovieApi.Controllers
                 return StatusCode(500, $"Error adding the genre to the movie");
 
             }
-            catch (Exception)
-            {
-                return BadRequest();
-            }
+            //catch (Exception ex)
+            //{
+            //    throw ex;
+            //}
 
 
 

@@ -19,6 +19,10 @@ using Serilog.Events;
 using Serilog.Context;
 using System.Security.Claims;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Diagnostics;
+using MovieApi;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 
 Log.Logger = new LoggerConfiguration()
             .MinimumLevel.Override("Microsoft", LogEventLevel.Information)
@@ -72,7 +76,7 @@ try
 
     builder.Services.AddSwaggerGen(option =>
     {
-        option.SwaggerDoc("v1", new OpenApiInfo { Title = "Test API", Version = "v1" });
+        option.SwaggerDoc("v1", new OpenApiInfo { Title = "Movie Management API", Version = "v1" });
         option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {
             In = ParameterLocation.Header,
@@ -144,6 +148,16 @@ try
 
     builder.Services.AddScoped<TokenService, TokenService>();
 
+    builder.Services.AddTransient<ExceptionMiddleware>();
+    //builder.Services.AddStackExchangeRedisCache(options => { options.Configuration = builder.Configuration["RedisCacheUrl"]; });
+    builder.Services.AddSingleton<IDistributedCache>(serviceProvider =>
+    {
+        return new RedisCache(new RedisCacheOptions
+        {
+            Configuration = builder.Configuration["RedisCacheUrl"]
+        });
+    });
+
 
     var app = builder.Build();
 
@@ -176,7 +190,11 @@ try
     app.UseAuthentication();
 
   
+
+
     app.UseAuthorization();
+
+    app.UseMiddleware<ExceptionMiddleware>();
 
     app.MapControllers();
 

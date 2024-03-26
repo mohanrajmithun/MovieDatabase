@@ -39,14 +39,7 @@ namespace MovieDatabase.Application
         Task<MovieWithGenresDTO> DeleteGenretoMovie(MovieGenre movieGenre);
 
         Task<Movie> DeleteMovie(int Id);
-        //Task<Movie> DeleteMovie(int id);
-
-        //Task<Genre> CreateGenre(Genre genre);
-
-        //Task<Movie> UpdateGenre(Genre genre);
-
-        //Task<Movie> DeleteGenre(int id);
-
+  
 
 
 
